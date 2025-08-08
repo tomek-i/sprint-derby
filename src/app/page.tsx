@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Flag, Trophy } from 'lucide-react';
-import Lobby from '@/components/lobby';
 import RaceTrack from '@/components/race-track';
 import PlayerStats from '@/components/player-stats';
+import Lobby from '@/components/lobby';
 import { ValueNoise } from '@/lib/noise';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,18 +20,16 @@ export type Player = {
 
 type GameState = 'lobby' | 'racing' | 'finished';
 
-const aiOpponents = [
-  { name: 'Rival', jockeyName: 'Gallop Ghost', color: 'hsl(210 40% 96%)' },
-  { name: 'Challenger', jockeyName: 'Star Strider', color: 'hsl(140 40% 96%)' },
-  { name: 'Maverick', jockeyName: 'Night Runner', color: 'hsl(340 40% 96%)' },
-];
-
-const darkAIColors = [
+const availableColors = [
+    'hsl(40 50% 96%)',
     'hsl(210 80% 50%)',
     'hsl(140 70% 50%)',
     'hsl(340 80% 60%)',
+    'hsl(20 80% 60%)',
+    'hsl(260 70% 60%)',
+    'hsl(180 70% 40%)',
+    'hsl(60 80% 55%)'
 ];
-
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>('lobby');
@@ -39,30 +37,16 @@ export default function Home() {
   const [winner, setWinner] = useState<Player | null>(null);
   const [progress, setProgress] = useState<Map<string, number>>(new Map());
 
-  const handleStartRace = useCallback((userName: string, userJockeyName: string) => {
-    const userPlayer: Player = {
-      id: 'player',
-      name: userName,
-      jockeyName: userJockeyName,
-      color: 'hsl(40 50% 96%)',
+  const handleStartRace = useCallback((players: Player[]) => {
+    const playersWithNoise = players.map(p => ({
+      ...p,
       noise: new ValueNoise(Math.random()),
-      isAI: false,
-    };
-
-    const opponentPlayers: Player[] = aiOpponents.map((op, index) => ({
-      id: `ai-${index}`,
-      name: op.name,
-      jockeyName: op.jockeyName,
-      color: darkAIColors[index],
-      noise: new ValueNoise(Math.random()),
-      isAI: true,
     }));
 
-    const allPlayers = [userPlayer, ...opponentPlayers];
-    setPlayers(allPlayers);
+    setPlayers(playersWithNoise);
 
     const initialProgress = new Map<string, number>();
-    allPlayers.forEach(p => initialProgress.set(p.id, 0));
+    playersWithNoise.forEach(p => initialProgress.set(p.id, 0));
     setProgress(initialProgress);
 
     setWinner(null);
@@ -81,12 +65,17 @@ export default function Home() {
     setProgress(new Map(newProgress));
   }, []);
 
-  const handlePlayAgain = () => {
+  const handleBackToLobby = () => {
+    setGameState('lobby');
+    // We keep the players list so the user can race again with the same players
+  };
+
+  const handleResetGame = () => {
     setGameState('lobby');
     setPlayers([]);
     setWinner(null);
     setProgress(new Map());
-  };
+  }
 
   return (
     <main className="container mx-auto p-4 md:p-8 flex flex-col items-center justify-center min-h-screen font-sans">
@@ -99,11 +88,11 @@ export default function Home() {
           </h1>
           <p className="text-muted-foreground text-lg mt-2">The ultimate AI-powered horse racing simulation.</p>
         </header>
-
-        {gameState === 'lobby' && <Lobby onStartRace={handleStartRace} />}
+        
+        <Lobby onStartRace={handleStartRace} availableColors={availableColors} players={players} setPlayers={setPlayers} disabled={gameState !== 'lobby'} />
 
         {(gameState === 'racing' || gameState === 'finished') && (
-          <div className="space-y-8 w-full">
+          <div className="space-y-8 w-full mt-8">
             <RaceTrack
               players={players}
               onRaceEnd={handleRaceEnd}
@@ -129,9 +118,14 @@ export default function Home() {
                    <p className="text-lg text-black/70">ridden by {winner.jockeyName}</p>
                 </div>
                 <p className="text-xl">Congratulations on the victory!</p>
-                <Button onClick={handlePlayAgain} size="lg" className="mt-4">
-                  Race Again
-                </Button>
+                <div className="flex gap-4 mt-4">
+                  <Button onClick={handleBackToLobby} size="lg" variant="outline">
+                    Back to Lobby
+                  </Button>
+                  <Button onClick={handleResetGame} size="lg">
+                    New Race
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
