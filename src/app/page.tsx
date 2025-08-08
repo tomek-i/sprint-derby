@@ -38,6 +38,7 @@ export default function Home() {
   const [winner, setWinner] = useState<Player | null>(null);
   const [showWinnerPopup, setShowWinnerPopup] = useState(false);
   const [progress, setProgress] = useState<Map<string, number>>(new Map());
+  const [speeds, setSpeeds] = useState<Map<string, number>>(new Map());
   const [windowSize, setWindowSize] = useState<{width: number, height: number}>({width: 0, height: 0});
 
   useEffect(() => {
@@ -63,8 +64,13 @@ export default function Home() {
     setPlayers(playersWithNoise);
 
     const initialProgress = new Map<string, number>();
-    playersWithNoise.forEach(p => initialProgress.set(p.id, 0));
+    const initialSpeeds = new Map<string, number>();
+    playersWithNoise.forEach(p => {
+        initialProgress.set(p.id, 0);
+        initialSpeeds.set(p.id, 0);
+    });
     setProgress(initialProgress);
+    setSpeeds(initialSpeeds);
 
     setWinner(null);
     setGameState('racing');
@@ -80,8 +86,9 @@ export default function Home() {
     setShowWinnerPopup(true);
   }, [players]);
 
-  const handleProgressUpdate = useCallback((newProgress: Map<string, number>) => {
+  const handleProgressUpdate = useCallback((newProgress: Map<string, number>, newSpeeds: Map<string, number>) => {
     setProgress(new Map(newProgress));
+    setSpeeds(new Map(newSpeeds));
   }, []);
 
   const handleBackToLobby = () => {
@@ -95,6 +102,7 @@ export default function Home() {
     setPlayers([]);
     setWinner(null);
     setProgress(new Map());
+    setSpeeds(new Map());
     setShowWinnerPopup(false);
   }
 
@@ -122,7 +130,7 @@ export default function Home() {
               onProgressUpdate={handleProgressUpdate}
               isRacing={gameState === 'racing'}
             />
-            <PlayerStats players={players} progress={progress} winnerId={winner?.id ?? null} />
+            <PlayerStats players={players} progress={progress} speeds={speeds} winnerId={winner?.id ?? null} />
           </div>
         )}
 

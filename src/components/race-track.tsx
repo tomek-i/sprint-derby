@@ -9,30 +9,34 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 interface RaceTrackProps {
   players: Player[];
   onRaceEnd: (winnerId: string) => void;
-  onProgressUpdate: (progress: Map<string, number>) => void;
+  onProgressUpdate: (progress: Map<string, number>, speeds: Map<string, number>) => void;
   isRacing: boolean;
 }
 
 const RACE_LENGTH = 100; // Represents 100%
-const BASE_SPEED = 0.025;
-const SPEED_VARIATION = 0.15; // Increased from 0.05
+const BASE_SPEED = 0.01;
+const SPEED_VARIATION = 0.15;
 
 export default function RaceTrack({ players, onRaceEnd, onProgressUpdate, isRacing }: RaceTrackProps) {
   const horseRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
   const progressRef = useRef<Map<string, number>>(new Map());
+  const speedsRef = useRef<Map<string, number>>(new Map());
   const animationFrameId = useRef<number>();
   const timeRef = useRef(0);
 
   const setupRace = useCallback(() => {
     const initialProgress = new Map<string, number>();
+    const initialSpeeds = new Map<string, number>();
     players.forEach(p => {
         initialProgress.set(p.id, 0);
+        initialSpeeds.set(p.id, 0);
         const horseEl = horseRefs.current.get(p.id);
         if (horseEl) {
             horseEl.style.transform = `translateX(0%)`;
         }
     });
     progressRef.current = initialProgress;
+    speedsRef.current = initialSpeeds;
     timeRef.current = 0;
   }, [players]);
 
@@ -58,6 +62,7 @@ export default function RaceTrack({ players, onRaceEnd, onProgressUpdate, isRaci
             const noise = player.noise.get(timeRef.current);
             const speed = BASE_SPEED + noise * SPEED_VARIATION;
             currentProgress += speed;
+            speedsRef.current.set(player.id, speed);
         }
         
         progressRef.current.set(player.id, Math.min(currentProgress, RACE_LENGTH));
@@ -74,7 +79,7 @@ export default function RaceTrack({ players, onRaceEnd, onProgressUpdate, isRaci
       });
       
       if (timestamp - lastProgressUpdateTime > 100) {
-        onProgressUpdate(new Map(progressRef.current));
+        onProgressUpdate(new Map(progressRef.current), new Map(speedsRef.current));
         lastProgressUpdateTime = timestamp;
       }
 

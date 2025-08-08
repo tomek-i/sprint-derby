@@ -1,6 +1,6 @@
 'use client';
 
-import { Trophy, User, Bot } from 'lucide-react';
+import { Trophy, User, Bot, Wind } from 'lucide-react';
 import { type Player } from '@/app/page';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -18,10 +18,11 @@ const HorseIcon = (props: React.SVGProps<SVGSVGElement>) => (
 interface PlayerStatsProps {
   players: Player[];
   progress: Map<string, number>;
+  speeds: Map<string, number>;
   winnerId: string | null;
 }
 
-export default function PlayerStats({ players, progress, winnerId }: PlayerStatsProps) {
+export default function PlayerStats({ players, progress, speeds, winnerId }: PlayerStatsProps) {
   const sortedPlayers = [...players].sort((a, b) => {
     const progressA = progress.get(a.id) ?? 0;
     const progressB = progress.get(b.id) ?? 0;
@@ -37,6 +38,7 @@ export default function PlayerStats({ players, progress, winnerId }: PlayerStats
         <div className="space-y-4">
           {sortedPlayers.map((player, index) => {
             const playerProgress = progress.get(player.id) ?? 0;
+            const playerSpeed = speeds.get(player.id) ?? 0;
             const isWinner = player.id === winnerId;
             const rank = index + 1;
 
@@ -73,7 +75,11 @@ export default function PlayerStats({ players, progress, winnerId }: PlayerStats
                        <span>{player.jockeyName}</span>
                     </div>
                   </div>
-                   <div className="text-2xl font-black tabular-nums">
+                  <div className="flex items-center gap-2 text-lg font-semibold text-muted-foreground">
+                    <Wind className="w-5 h-5" />
+                    <span>{(playerSpeed * 1000).toFixed(1)} km/s</span>
+                  </div>
+                   <div className="text-2xl font-black tabular-nums w-20 text-right">
                     {Math.floor(playerProgress)}%
                   </div>
                 </div>
