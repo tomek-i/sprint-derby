@@ -77,7 +77,7 @@ export default function PlayerStats({ players, progress, speeds, winnerId }: Pla
                   </div>
                   <div className="flex items-center gap-2 text-lg font-semibold text-muted-foreground">
                     <Wind className="w-5 h-5" />
-                    <span>{(playerSpeed * 1000).toFixed(1)} km/s</span>
+                    <span>{playerSpeed.toFixed(1)} m/s</span>
                   </div>
                    <div className="text-2xl font-black tabular-nums w-20 text-right">
                     {Math.floor(playerProgress)}%

@@ -13,7 +13,7 @@ interface RaceSummaryProps {
 }
 
 export default function RaceSummary({ players, stats }: RaceSummaryProps) {
-    const toKms = (speed: number) => (speed * 1000).toFixed(1);
+    const toFixed = (speed: number) => speed.toFixed(1);
 
     const leaderboard = useMemo(() => {
         if (stats.size === 0) return null;
@@ -63,15 +63,15 @@ export default function RaceSummary({ players, stats }: RaceSummaryProps) {
                             <div className="flex gap-4 text-sm text-center">
                                 <div>
                                     <div className="flex items-center justify-center gap-1 text-green-500"><ChevronsUp className="w-4 h-4"/> Max</div>
-                                    <p className="font-bold">{toKms(playerStats.maxSpeed)} km/s</p>
+                                    <p className="font-bold">{toFixed(playerStats.maxSpeed)} m/s</p>
                                 </div>
                                 <div>
                                     <div className="flex items-center justify-center gap-1 text-blue-500"><TrendingUp className="w-4 h-4"/> Avg</div>
-                                    <p className="font-bold">{toKms(playerStats.avgSpeed)} km/s</p>
+                                    <p className="font-bold">{toFixed(playerStats.avgSpeed)} m/s</p>
                                 </div>
                                 <div>
                                     <div className="flex items-center justify-center gap-1 text-red-500"><ChevronsDown className="w-4 h-4"/> Min</div>
-                                    <p className="font-bold">{toKms(playerStats.minSpeed)} km/s</p>
+                                    <p className="font-bold">{toFixed(playerStats.minSpeed)} m/s</p>
                                 </div>
                             </div>
                         </div>
@@ -91,7 +91,7 @@ export default function RaceSummary({ players, stats }: RaceSummaryProps) {
                                 <div>
                                     <p className="font-bold text-green-500">Fastest Horse</p>
                                     <p>{leaderboard.fastest.player.jockeyName}</p>
-                                    <p className="text-sm font-semibold">{toKms(leaderboard.fastest.speed)} km/s</p>
+                                    <p className="text-sm font-semibold">{toFixed(leaderboard.fastest.speed)} m/s</p>
                                 </div>
                            </div>
                         </Card>
@@ -103,7 +103,7 @@ export default function RaceSummary({ players, stats }: RaceSummaryProps) {
                                 <div>
                                     <p className="font-bold text-red-500">Slowest Moment</p>
                                     <p>{leaderboard.slowest.player.jockeyName}</p>
-                                    <p className="text-sm font-semibold">{toKms(leaderboard.slowest.speed)} km/s</p>
+                                    <p className="text-sm font-semibold">{toFixed(leaderboard.slowest.speed)} m/s</p>
                                 </div>
                            </div>
                         </Card>

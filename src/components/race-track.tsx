@@ -13,9 +13,10 @@ interface RaceTrackProps {
   isRacing: boolean;
 }
 
-const RACE_LENGTH = 100; // Represents 100%
-const BASE_SPEED = 0.005;
-const SPEED_VARIATION = 0.15;
+const RACE_LENGTH = 100; // Represents 100% of the track
+const TIME_STEP = 1 / 60; // Simulate 60 physics updates per second
+const MAX_SPEED_MPS = 20; // Max speed in meters per second (approx. 72 km/h)
+const ACCELERATION_FACTOR = 2; // How quickly they can change speed
 
 export default function RaceTrack({ players, onRaceEnd, onProgressUpdate, isRacing }: RaceTrackProps) {
   const horseRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
@@ -61,13 +62,28 @@ export default function RaceTrack({ players, onRaceEnd, onProgressUpdate, isRaci
 
       players.forEach(player => {
         let currentProgress = progressRef.current.get(player.id) ?? 0;
+        let currentSpeed = speedsRef.current.get(player.id) ?? 0;
 
         if (currentProgress < RACE_LENGTH) {
-            const noise = player.noise.get(timeRef.current);
-            const speed = BASE_SPEED + noise * SPEED_VARIATION;
-            currentProgress += speed;
-            speedsRef.current.set(player.id, speed);
-            speedHistoryRef.current.get(player.id)?.push(speed);
+            const noise = player.noise.get(timeRef.current); // Value from 0 to 1
+            
+            // The noise determines the 'target' speed for this moment.
+            // It's a percentage of the max possible speed.
+            const targetSpeed = noise * MAX_SPEED_MPS;
+
+            // Smoothly move the current speed towards the target speed.
+            const speedChange = (targetSpeed - currentSpeed) * ACCELERATION_FACTOR * TIME_STEP;
+            currentSpeed += speedChange;
+
+            // Ensure speed doesn't go below zero or exceed max speed
+            currentSpeed = Math.max(0, Math.min(currentSpeed, MAX_SPEED_MPS));
+            
+            // The progress update is based on the current speed
+            // We divide by a factor to make the race last a reasonable amount of time on screen
+            currentProgress += (currentSpeed / MAX_SPEED_MPS) * 0.2; 
+            
+            speedsRef.current.set(player.id, currentSpeed);
+            speedHistoryRef.current.get(player.id)?.push(currentSpeed);
         }
         
         progressRef.current.set(player.id, Math.min(currentProgress, RACE_LENGTH));
