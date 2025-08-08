@@ -127,6 +127,7 @@ export default function Home() {
               recycle={false}
               numberOfPieces={500}
               tweenDuration={10000}
+              style={{ zIndex: 100 }}
             />
             <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
               <Card className="w-full max-w-md text-center shadow-2xl animate-in fade-in zoom-in-95">
