@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Photo Finish Derby',
+  title: 'Sprint Derby',
   description: 'Simulate horse races with AI-generated jockeys.',
 };
 
