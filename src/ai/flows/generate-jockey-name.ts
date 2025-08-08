@@ -15,6 +15,9 @@ const GenerateJockeyNameInputSchema = z.object({
     .string()
     .default('horse')
     .describe('The type of animal the jockey will ride.'),
+  playerName: z
+    .string()
+    .describe('The name of the player to generate a jockey name for.'),
 });
 export type GenerateJockeyNameInput = z.infer<typeof GenerateJockeyNameInputSchema>;
 
@@ -33,7 +36,7 @@ const prompt = ai.definePrompt({
   output: {schema: GenerateJockeyNameOutputSchema},
   prompt: `You are a creative jockey name generator for a {{animalType}} race.
 
-  Generate a fun and thematic jockey name.
+  Generate a fun and thematic jockey name for a player named "{{playerName}}".
 
   Name:`,
 });

@@ -64,7 +64,7 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
     }
 
     startTransition(async () => {
-      const jockeyNameResult = await generateJockeyNameAction({ animalType: 'horse' });
+      const jockeyNameResult = await generateJockeyNameAction({ animalType: 'horse', playerName: values.name });
       if (jockeyNameResult.error || !jockeyNameResult.jockeyName) {
         toast({
           variant: 'destructive',
