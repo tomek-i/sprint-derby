@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Flag, Trophy } from 'lucide-react';
+import { Flag, Trophy, X } from 'lucide-react';
 import RaceTrack from '@/components/race-track';
 import PlayerStats from '@/components/player-stats';
 import Lobby from '@/components/lobby';
@@ -36,6 +36,7 @@ export default function Home() {
   const [gameState, setGameState] = useState<GameState>('lobby');
   const [players, setPlayers] = useState<Player[]>([]);
   const [winner, setWinner] = useState<Player | null>(null);
+  const [showWinnerPopup, setShowWinnerPopup] = useState(false);
   const [progress, setProgress] = useState<Map<string, number>>(new Map());
   const [windowSize, setWindowSize] = useState<{width: number, height: number}>({width: 0, height: 0});
 
@@ -67,6 +68,7 @@ export default function Home() {
 
     setWinner(null);
     setGameState('racing');
+    setShowWinnerPopup(false);
   }, []);
 
   const handleRaceEnd = useCallback((winnerId: string) => {
@@ -75,6 +77,7 @@ export default function Home() {
       setWinner(winnerPlayer);
     }
     setGameState('finished');
+    setShowWinnerPopup(true);
   }, [players]);
 
   const handleProgressUpdate = useCallback((newProgress: Map<string, number>) => {
@@ -83,6 +86,7 @@ export default function Home() {
 
   const handleBackToLobby = () => {
     setGameState('lobby');
+    setShowWinnerPopup(false);
     // We keep the players list so the user can race again with the same players
   };
 
@@ -91,6 +95,7 @@ export default function Home() {
     setPlayers([]);
     setWinner(null);
     setProgress(new Map());
+    setShowWinnerPopup(false);
   }
 
   return (
@@ -121,7 +126,7 @@ export default function Home() {
           </div>
         )}
 
-        {gameState === 'finished' && winner && (
+        {showWinnerPopup && winner && (
           <>
             <ReactConfetti
               width={windowSize.width}
@@ -132,7 +137,11 @@ export default function Home() {
               style={{ zIndex: 100 }}
             />
             <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-              <Card className="w-full max-w-md text-center shadow-2xl animate-in fade-in zoom-in-95">
+              <Card className="w-full max-w-md text-center shadow-2xl animate-in fade-in zoom-in-95 relative">
+                <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => setShowWinnerPopup(false)}>
+                  <X className="h-5 w-5" />
+                  <span className="sr-only">Close</span>
+                </Button>
                 <CardHeader>
                   <CardTitle className="text-4xl font-black text-accent flex items-center justify-center gap-3">
                     <Trophy className="w-10 h-10" />
