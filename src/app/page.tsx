@@ -114,8 +114,8 @@ export default function Home() {
               </CardHeader>
               <CardContent className="flex flex-col items-center gap-4">
                 <div className="p-4 rounded-lg" style={{ backgroundColor: winner.color }}>
-                   <p className="text-2xl font-bold" style={{ color: 'hsl(var(--background))' }}>{winner.name}</p>
-                   <p className="text-lg text-black/70">ridden by {winner.jockeyName}</p>
+                   <p className="text-2xl font-bold" style={{ color: 'hsl(var(--background))' }}>{winner.jockeyName}</p>
+                   <p className="text-lg text-black/70">ridden by {winner.name}</p>
                 </div>
                 <p className="text-xl">Congratulations on the victory!</p>
                 <div className="flex gap-4 mt-4">

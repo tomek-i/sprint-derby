@@ -165,8 +165,8 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <p className="font-bold">{player.name}</p>
-                    <p className="text-sm text-muted-foreground">{player.jockeyName}</p>
+                    <p className="font-bold">{player.jockeyName}</p>
+                    <p className="text-sm text-muted-foreground">{player.name}</p>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => removePlayer(player.id)}>
                       <Trash2 className="w-4 h-4 text-destructive" />
