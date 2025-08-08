@@ -5,8 +5,6 @@ import { type Player, type PlayerStatsData } from '@/app/page';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMemo } from "react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "./ui/chart";
 
 interface RaceSummaryProps {
   players: Player[];
@@ -14,7 +12,7 @@ interface RaceSummaryProps {
   speedHistory: Map<string, number[]>;
 }
 
-export default function RaceSummary({ players, stats, speedHistory }: RaceSummaryProps) {
+export default function RaceSummary({ players, stats }: RaceSummaryProps) {
     const toFixed = (speed: number) => speed.toFixed(1);
 
     const leaderboard = useMemo(() => {
@@ -22,6 +20,7 @@ export default function RaceSummary({ players, stats, speedHistory }: RaceSummar
         
         let fastest: {player: Player, speed: number} | null = null;
         let slowest: {player: Player, speed: number} | null = null;
+        let mostConsistent: {player: Player, variation: number} | null = null;
 
         players.forEach(player => {
             const playerStats = stats.get(player.id);
@@ -38,104 +37,42 @@ export default function RaceSummary({ players, stats, speedHistory }: RaceSummar
         return { fastest, slowest };
     }, [players, stats]);
 
-    const chartData = useMemo(() => {
-        const dataMap = new Map<string, { time: number; speed: number }[]>();
-        speedHistory.forEach((speeds, playerId) => {
-            const data = speeds.map((speed, index) => ({
-                time: index,
-                speed: parseFloat(speed.toFixed(1)),
-            }));
-            dataMap.set(playerId, data);
-        });
-        return dataMap;
-    }, [speedHistory]);
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>Race Summary</CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
+      <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-4">
             <h3 className="font-bold text-lg">Racer Performance</h3>
             {players.map(player => {
                 const playerStats = stats.get(player.id);
                 if (!playerStats) return null;
 
-                const data = chartData.get(player.id) ?? [];
-                
-                const chartConfig = {
-                    speed: {
-                      label: "Speed (m/s)",
-                      color: player.color,
-                    },
-                  } satisfies ChartConfig
-
                 return (
-                    <div key={player.id} className="p-3 rounded-lg bg-secondary/20 space-y-2">
-                        <div className="flex items-center gap-4">
-                            <Avatar>
-                                <AvatarFallback style={{ backgroundColor: player.color, color: 'hsl(var(--background))' }}>
-                                    {player.name.substring(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                            </Avatar>
-                             <div className="flex-1">
-                                <p className="font-bold">{player.jockeyName}</p>
-                                <p className="text-sm text-muted-foreground">{player.name}</p>
-                            </div>
-                            <div className="flex gap-4 text-sm text-center">
-                                <div>
-                                    <div className="flex items-center justify-center gap-1 text-green-500"><ChevronsUp className="w-4 h-4"/> Max</div>
-                                    <p className="font-bold">{toFixed(playerStats.maxSpeed)} m/s</p>
-                                </div>
-                                <div>
-                                    <div className="flex items-center justify-center gap-1 text-blue-500"><TrendingUp className="w-4 h-4"/> Avg</div>
-                                    <p className="font-bold">{toFixed(playerStats.avgSpeed)} m/s</p>
-                                </div>
-                                <div>
-                                    <div className="flex items-center justify-center gap-1 text-red-500"><ChevronsDown className="w-4 h-4"/> Min</div>
-                                    <p className="font-bold">{toFixed(playerStats.minSpeed)} m/s</p>
-                                </div>
-                            </div>
+                    <div key={player.id} className="p-3 rounded-lg bg-secondary/20 flex items-center gap-4">
+                        <Avatar>
+                            <AvatarFallback style={{ backgroundColor: player.color, color: 'hsl(var(--background))' }}>
+                                {player.name.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                         <div className="flex-1">
+                            <p className="font-bold">{player.jockeyName}</p>
+                            <p className="text-sm text-muted-foreground">{player.name}</p>
                         </div>
-                        <div className="h-32 w-full">
-                            <ChartContainer config={chartConfig}>
-                                <AreaChart
-                                    accessibilityLayer
-                                    data={data}
-                                    margin={{
-                                        left: 0,
-                                        right: 12,
-                                        top: 5,
-                                        bottom: 0,
-                                    }}
-                                >
-                                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                                    <XAxis
-                                        dataKey="time"
-                                        tickLine={false}
-                                        axisLine={false}
-                                        tickMargin={8}
-                                        tickFormatter={() => ""}
-                                        label="Time"
-                                    />
-                                     <YAxis
-                                        tickLine={false}
-                                        axisLine={false}
-                                        tickMargin={8}
-                                        domain={[0, 'dataMax + 2']}
-                                    />
-                                    <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
-                                    <Area
-                                        dataKey="speed"
-                                        type="natural"
-                                        fill={player.color}
-                                        fillOpacity={0.4}
-                                        stroke={player.color}
-                                        stackId="a"
-                                    />
-                                </AreaChart>
-                            </ChartContainer>
+                        <div className="flex gap-4 text-sm text-center">
+                            <div>
+                                <div className="flex items-center justify-center gap-1 text-green-500"><ChevronsUp className="w-4 h-4"/> Max</div>
+                                <p className="font-bold">{toFixed(playerStats.maxSpeed)} m/s</p>
+                            </div>
+                            <div>
+                                <div className="flex items-center justify-center gap-1 text-blue-500"><TrendingUp className="w-4 h-4"/> Avg</div>
+                                <p className="font-bold">{toFixed(playerStats.avgSpeed)} m/s</p>
+                            </div>
+                            <div>
+                                <div className="flex items-center justify-center gap-1 text-red-500"><ChevronsDown className="w-4 h-4"/> Min</div>
+                                <p className="font-bold">{toFixed(playerStats.minSpeed)} m/s</p>
+                            </div>
                         </div>
                     </div>
                 );
@@ -144,14 +81,14 @@ export default function RaceSummary({ players, stats, speedHistory }: RaceSummar
         
         {leaderboard && (
             <div className="space-y-4">
-                 <h3 className="font-bold text-lg">Leaderboard</h3>
+                 <h3 className="font-bold text-lg">Highlights</h3>
                  <div className="space-y-3">
                     {leaderboard.fastest && (
                         <Card className="p-4 bg-green-500/10 border-green-500/30">
                            <div className="flex items-center gap-3">
                                 <Rabbit className="w-8 h-8 text-green-500"/>
                                 <div>
-                                    <p className="font-bold text-green-500">Fastest Horse</p>
+                                    <p className="font-bold text-green-500">Top Speed</p>
                                     <p>{leaderboard.fastest.player.jockeyName}</p>
                                     <p className="text-sm font-semibold">{toFixed(leaderboard.fastest.speed)} m/s</p>
                                 </div>
