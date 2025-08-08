@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Flag, Trophy } from 'lucide-react';
 import RaceTrack from '@/components/race-track';
 import PlayerStats from '@/components/player-stats';
@@ -8,6 +8,7 @@ import Lobby from '@/components/lobby';
 import { ValueNoise } from '@/lib/noise';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ReactConfetti from 'react-confetti';
 
 export type Player = {
   id: string;
@@ -36,6 +37,21 @@ export default function Home() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [winner, setWinner] = useState<Player | null>(null);
   const [progress, setProgress] = useState<Map<string, number>>(new Map());
+  const [windowSize, setWindowSize] = useState<{width: number, height: number}>({width: 0, height: 0});
+
+  useEffect(() => {
+    const handleResize = () => {
+        setWindowSize({
+            width: window.innerWidth,
+            height: window.innerHeight,
+        });
+    };
+    
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleStartRace = useCallback((players: Player[]) => {
     const playersWithNoise = players.map(p => ({
@@ -104,31 +120,40 @@ export default function Home() {
         )}
 
         {gameState === 'finished' && winner && (
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-            <Card className="w-full max-w-md text-center shadow-2xl animate-in fade-in zoom-in-95">
-              <CardHeader>
-                <CardTitle className="text-4xl font-black text-accent flex items-center justify-center gap-3">
-                  <Trophy className="w-10 h-10" />
-                  We have a winner!
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center gap-4">
-                <div className="p-4 rounded-lg" style={{ backgroundColor: winner.color }}>
-                   <p className="text-2xl font-bold" style={{ color: 'hsl(var(--background))' }}>{winner.jockeyName}</p>
-                   <p className="text-lg text-black/70">ridden by {winner.name}</p>
-                </div>
-                <p className="text-xl">Congratulations on the victory!</p>
-                <div className="flex gap-4 mt-4">
-                  <Button onClick={handleBackToLobby} size="lg" variant="outline">
-                    Back to Lobby
-                  </Button>
-                  <Button onClick={handleResetGame} size="lg">
-                    New Race
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <>
+            <ReactConfetti
+              width={windowSize.width}
+              height={windowSize.height}
+              recycle={false}
+              numberOfPieces={500}
+              tweenDuration={10000}
+            />
+            <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+              <Card className="w-full max-w-md text-center shadow-2xl animate-in fade-in zoom-in-95">
+                <CardHeader>
+                  <CardTitle className="text-4xl font-black text-accent flex items-center justify-center gap-3">
+                    <Trophy className="w-10 h-10" />
+                    We have a winner!
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center gap-4">
+                  <div className="p-4 rounded-lg" style={{ backgroundColor: winner.color }}>
+                     <p className="text-2xl font-bold" style={{ color: 'hsl(var(--background))' }}>{winner.jockeyName}</p>
+                     <p className="text-lg text-black/70">ridden by {winner.name}</p>
+                  </div>
+                  <p className="text-xl">Congratulations on the victory!</p>
+                  <div className="flex gap-4 mt-4">
+                    <Button onClick={handleBackToLobby} size="lg" variant="outline">
+                      Back to Lobby
+                    </Button>
+                    <Button onClick={handleResetGame} size="lg">
+                      New Race
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
         )}
       </div>
     </main>
