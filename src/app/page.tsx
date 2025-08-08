@@ -142,7 +142,7 @@ export default function Home() {
                      <p className="text-2xl font-bold" style={{ color: 'hsl(var(--background))' }}>{winner.jockeyName}</p>
                      <p className="text-lg text-black/70">ridden by {winner.name}</p>
                   </div>
-                  <p className="text-xl">Congratulations on the victory!</p>
+                  <p className="text-xl">Congratulations, you are running the Sprint</p>
                   <div className="flex gap-4 mt-4">
                     <Button onClick={handleBackToLobby} size="lg" variant="outline">
                       Back to Lobby
