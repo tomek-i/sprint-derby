@@ -97,9 +97,7 @@ export default function RaceTrack({ players, onRaceEnd, onProgressUpdate, isRaci
 
   return (
     <div className="w-full bg-secondary/30 p-4 rounded-lg border-2 border-dashed border-primary/50 space-y-2 relative overflow-hidden" data-ai-hint="race track">
-        <div className="absolute top-1/2 right-4 -translate-y-1/2 h-full border-l-4 border-dashed border-red-500/70 z-10 flex items-center">
-            <span className="bg-red-500 text-white font-bold p-2 rounded-l-md -ml-[2px]">FINISH</span>
-        </div>
+        <div className="absolute top-0 right-4 h-full border-r-4 border-dashed border-red-500/70 z-0"></div>
       {players.map((player) => (
         <div key={player.id} className="h-12 w-full rounded-md flex items-center bg-background/50 relative">
           <div ref={el => horseRefs.current.set(player.id, el)} className="transition-transform duration-100 ease-linear">
