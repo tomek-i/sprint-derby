@@ -9,6 +9,7 @@ import { ValueNoise } from '@/lib/noise';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ReactConfetti from 'react-confetti';
+import RaceSummary from '@/components/race-summary';
 
 export type Player = {
   id: string;
@@ -17,6 +18,12 @@ export type Player = {
   color: string;
   noise: ValueNoise;
   isAI: boolean;
+};
+
+export type PlayerStatsData = {
+  minSpeed: number;
+  maxSpeed: number;
+  avgSpeed: number;
 };
 
 type GameState = 'lobby' | 'racing' | 'finished';
@@ -40,6 +47,7 @@ export default function Home() {
   const [progress, setProgress] = useState<Map<string, number>>(new Map());
   const [speeds, setSpeeds] = useState<Map<string, number>>(new Map());
   const [windowSize, setWindowSize] = useState<{width: number, height: number}>({width: 0, height: 0});
+  const [raceStats, setRaceStats] = useState<Map<string, PlayerStatsData>>(new Map());
 
   useEffect(() => {
     const handleResize = () => {
@@ -71,17 +79,30 @@ export default function Home() {
     });
     setProgress(initialProgress);
     setSpeeds(initialSpeeds);
+    setRaceStats(new Map());
 
     setWinner(null);
     setGameState('racing');
     setShowWinnerPopup(false);
   }, []);
 
-  const handleRaceEnd = useCallback((winnerId: string) => {
+  const handleRaceEnd = useCallback((winnerId: string, speedHistory: Map<string, number[]>) => {
     const winnerPlayer = players.find(p => p.id === winnerId);
     if (winnerPlayer) {
       setWinner(winnerPlayer);
     }
+
+    const stats = new Map<string, PlayerStatsData>();
+    speedHistory.forEach((speeds, playerId) => {
+      if (speeds.length > 0) {
+        const minSpeed = Math.min(...speeds);
+        const maxSpeed = Math.max(...speeds);
+        const avgSpeed = speeds.reduce((sum, speed) => sum + speed, 0) / speeds.length;
+        stats.set(playerId, { minSpeed, maxSpeed, avgSpeed });
+      }
+    });
+    setRaceStats(stats);
+    
     setGameState('finished');
     setShowWinnerPopup(true);
   }, [players]);
@@ -104,6 +125,7 @@ export default function Home() {
     setProgress(new Map());
     setSpeeds(new Map());
     setShowWinnerPopup(false);
+    setRaceStats(new Map());
   }
 
   return (
@@ -131,6 +153,9 @@ export default function Home() {
               isRacing={gameState === 'racing'}
             />
             <PlayerStats players={players} progress={progress} speeds={speeds} winnerId={winner?.id ?? null} />
+            {gameState === 'finished' && raceStats.size > 0 && (
+              <RaceSummary players={players} stats={raceStats} />
+            )}
           </div>
         )}
 
