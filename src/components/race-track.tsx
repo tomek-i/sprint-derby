@@ -21,7 +21,7 @@ interface RaceTrackProps {
 
 const RACE_LENGTH = 100; // Represents 100%
 const BASE_SPEED = 0.05;
-const SPEED_VARIATION = 0.05;
+const SPEED_VARIATION = 0.15; // Increased from 0.05
 
 export default function RaceTrack({ players, onRaceEnd, onProgressUpdate, isRacing }: RaceTrackProps) {
   const horseRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
