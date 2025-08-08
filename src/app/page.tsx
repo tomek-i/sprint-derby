@@ -24,6 +24,7 @@ export type PlayerStatsData = {
   minSpeed: number;
   maxSpeed: number;
   avgSpeed: number;
+  finishTime?: number;
 };
 
 type GameState = 'lobby' | 'racing' | 'finished';
@@ -89,8 +90,17 @@ export default function Home() {
     setShowWinnerPopup(false);
   }, []);
 
-  const handleRaceEnd = useCallback((winnerId: string, speedHistory: Map<string, number[]>) => {
-    const winnerPlayer = players.find(p => p.id === winnerId);
+  const handleRaceEnd = useCallback((finishTimes: Map<string, number>, speedHistory: Map<string, number[]>) => {
+    let winnerPlayer: Player | null = null;
+    let bestTime = Infinity;
+
+    finishTimes.forEach((time, playerId) => {
+        if (time < bestTime) {
+            bestTime = time;
+            winnerPlayer = players.find(p => p.id === playerId) ?? null;
+        }
+    });
+
     if (winnerPlayer) {
       setWinner(winnerPlayer);
     }
@@ -102,7 +112,8 @@ export default function Home() {
         const minSpeed = Math.min(...speeds);
         const maxSpeed = Math.max(...speeds);
         const avgSpeed = speeds.reduce((sum, speed) => sum + speed, 0) / speeds.length;
-        stats.set(playerId, { minSpeed, maxSpeed, avgSpeed });
+        const finishTime = finishTimes.get(playerId);
+        stats.set(playerId, { minSpeed, maxSpeed, avgSpeed, finishTime });
       }
     });
     setRaceStats(stats);
@@ -133,6 +144,20 @@ export default function Home() {
     setSpeedHistory(new Map());
   }
 
+  const getWinnerId = () => {
+    let winnerId: string | null = null;
+    let bestTime = Infinity;
+
+    raceStats.forEach((stats, playerId) => {
+      if (stats.finishTime !== undefined && stats.finishTime < bestTime) {
+        bestTime = stats.finishTime;
+        winnerId = playerId;
+      }
+    });
+
+    return winnerId;
+  };
+
   return (
     <main className="container mx-auto p-4 md:p-8 flex flex-col items-center justify-center min-h-screen font-sans">
       <div className="w-full max-w-6xl">
@@ -157,7 +182,7 @@ export default function Home() {
               onProgressUpdate={handleProgressUpdate}
               isRacing={gameState === 'racing'}
             />
-            <PlayerStats players={players} progress={progress} speeds={speeds} winnerId={winner?.id ?? null} />
+            <PlayerStats players={players} progress={progress} speeds={speeds} winnerId={getWinnerId()} raceState={gameState} finishTimes={raceStats} />
             {gameState === 'finished' && raceStats.size > 0 && (
               <RaceSummary players={players} stats={raceStats} speedHistory={speedHistory} />
             )}

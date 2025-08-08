@@ -8,41 +8,45 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 
 interface RaceTrackProps {
   players: Player[];
-  onRaceEnd: (winnerId: string, speedHistory: Map<string, number[]>) => void;
+  onRaceEnd: (finishTimes: Map<string, number>, speedHistory: Map<string, number[]>) => void;
   onProgressUpdate: (progress: Map<string, number>, speeds: Map<string, number>) => void;
   isRacing: boolean;
 }
 
-const RACE_LENGTH = 100; // Represents 100% of the track
+const RACE_DISTANCE_METERS = 400; 
 const TIME_STEP = 1 / 60; // Simulate 60 physics updates per second
 const MAX_SPEED_MPS = 20; // Max speed in meters per second (approx. 72 km/h)
 const ACCELERATION_FACTOR = 2; // How quickly they can change speed
 
 export default function RaceTrack({ players, onRaceEnd, onProgressUpdate, isRacing }: RaceTrackProps) {
   const horseRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
-  const progressRef = useRef<Map<string, number>>(new Map());
+  const distanceRef = useRef<Map<string, number>>(new Map());
   const speedsRef = useRef<Map<string, number>>(new Map());
   const speedHistoryRef = useRef<Map<string, number[]>>(new Map());
+  const finishTimesRef = useRef<Map<string, number>>(new Map());
   const animationFrameId = useRef<number>();
-  const timeRef = useRef(0);
+  const raceTimeRef = useRef(0);
+  const raceStartTimeRef = useRef(0);
 
   const setupRace = useCallback(() => {
-    const initialProgress = new Map<string, number>();
+    const initialDistance = new Map<string, number>();
     const initialSpeeds = new Map<string, number>();
     const initialSpeedHistory = new Map<string, number[]>();
     players.forEach(p => {
-        initialProgress.set(p.id, 0);
+        initialDistance.set(p.id, 0);
         initialSpeeds.set(p.id, 0);
         initialSpeedHistory.set(p.id, []);
         const horseEl = horseRefs.current.get(p.id);
         if (horseEl) {
-            horseEl.style.transform = `translateX(0%)`;
+            horseEl.style.transform = `translateX(0px)`;
         }
     });
-    progressRef.current = initialProgress;
+    distanceRef.current = initialDistance;
     speedsRef.current = initialSpeeds;
     speedHistoryRef.current = initialSpeedHistory;
-    timeRef.current = 0;
+    finishTimesRef.current = new Map();
+    raceTimeRef.current = 0;
+    raceStartTimeRef.current = 0;
   }, [players]);
 
   useEffect(() => {
@@ -57,54 +61,69 @@ export default function RaceTrack({ players, onRaceEnd, onProgressUpdate, isRaci
         return;
       }
       
-      timeRef.current += 0.1;
-      let winnerFound = false;
+      if (raceStartTimeRef.current === 0) {
+        raceStartTimeRef.current = timestamp;
+      }
+      const elapsedTime = timestamp - raceStartTimeRef.current;
+      
+      const physicsTime = raceTimeRef.current + 0.1; // Using a consistent increment for noise sampling
+      raceTimeRef.current = physicsTime;
+
+      let finishedCount = 0;
 
       players.forEach(player => {
-        let currentProgress = progressRef.current.get(player.id) ?? 0;
+        let currentDistance = distanceRef.current.get(player.id) ?? 0;
+        
+        // If the horse has finished, don't update it further
+        if (currentDistance >= RACE_DISTANCE_METERS) {
+          finishedCount++;
+          return;
+        }
+
         let currentSpeed = speedsRef.current.get(player.id) ?? 0;
 
-        if (currentProgress < RACE_LENGTH) {
-            const noise = player.noise.get(timeRef.current); // Value from 0 to 1
-            
-            // The noise determines the 'target' speed for this moment.
-            // It's a percentage of the max possible speed.
-            const targetSpeed = noise * MAX_SPEED_MPS;
+        const noise = player.noise.get(physicsTime); // Value from 0 to 1
+        const targetSpeed = noise * MAX_SPEED_MPS;
 
-            // Smoothly move the current speed towards the target speed.
-            const speedChange = (targetSpeed - currentSpeed) * ACCELERATION_FACTOR * TIME_STEP;
-            currentSpeed += speedChange;
-
-            // Ensure speed doesn't go below zero or exceed max speed
-            currentSpeed = Math.max(0, Math.min(currentSpeed, MAX_SPEED_MPS));
-            
-            // The progress update is based on the current speed
-            // We divide by a factor to make the race last a reasonable amount of time on screen
-            currentProgress += (currentSpeed / MAX_SPEED_MPS) * 0.2; 
-            
-            speedsRef.current.set(player.id, currentSpeed);
-            speedHistoryRef.current.get(player.id)?.push(currentSpeed);
-        }
+        const speedChange = (targetSpeed - currentSpeed) * ACCELERATION_FACTOR * TIME_STEP;
+        currentSpeed += speedChange;
+        currentSpeed = Math.max(0, Math.min(currentSpeed, MAX_SPEED_MPS));
         
-        progressRef.current.set(player.id, Math.min(currentProgress, RACE_LENGTH));
+        // Update distance based on speed and time step of animation frame
+        currentDistance += currentSpeed * TIME_STEP; 
+
+        speedsRef.current.set(player.id, currentSpeed);
+        speedHistoryRef.current.get(player.id)?.push(currentSpeed);
+        distanceRef.current.set(player.id, currentDistance);
         
         const horseEl = horseRefs.current.get(player.id);
         if (horseEl) {
-            horseEl.style.transform = `translateX(${currentProgress / RACE_LENGTH * (horseEl.parentElement!.offsetWidth - horseEl.offsetWidth)}px)`;
+            const trackWidth = horseEl.parentElement!.offsetWidth;
+            const horseWidth = horseEl.offsetWidth;
+            const progressPercentage = currentDistance / RACE_DISTANCE_METERS;
+            horseEl.style.transform = `translateX(${progressPercentage * (trackWidth - horseWidth)}px)`;
         }
-
-        if (currentProgress >= RACE_LENGTH && !winnerFound) {
-          winnerFound = true;
-          onRaceEnd(player.id, speedHistoryRef.current);
+        
+        if (currentDistance >= RACE_DISTANCE_METERS && !finishTimesRef.current.has(player.id)) {
+          finishTimesRef.current.set(player.id, elapsedTime);
+          finishedCount++;
         }
       });
       
+      // Send progress update periodically
       if (timestamp - lastProgressUpdateTime > 100) {
-        onProgressUpdate(new Map(progressRef.current), new Map(speedsRef.current));
+        const progressMap = new Map<string, number>();
+        distanceRef.current.forEach((dist, id) => {
+          progressMap.set(id, Math.min(100, (dist / RACE_DISTANCE_METERS) * 100));
+        });
+        onProgressUpdate(progressMap, new Map(speedsRef.current));
         lastProgressUpdateTime = timestamp;
       }
-
-      if (!winnerFound) {
+      
+      // If all players have finished, end the race
+      if (finishedCount === players.length) {
+        onRaceEnd(new Map(finishTimesRef.current), speedHistoryRef.current);
+      } else {
         animationFrameId.current = requestAnimationFrame(animate);
       }
     };
