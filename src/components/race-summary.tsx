@@ -1,18 +1,20 @@
 'use client';
 
-import { Award, ChevronsDown, ChevronsUp, Rabbit, Snail, TrendingUp } from "lucide-react";
+import { ChevronsDown, ChevronsUp, Rabbit, Snail, TrendingUp } from "lucide-react";
 import { type Player, type PlayerStatsData } from '@/app/page';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMemo } from "react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { cn } from "@/lib/utils";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "./ui/chart";
 
 interface RaceSummaryProps {
   players: Player[];
   stats: Map<string, PlayerStatsData>;
+  speedHistory: Map<string, number[]>;
 }
 
-export default function RaceSummary({ players, stats }: RaceSummaryProps) {
+export default function RaceSummary({ players, stats, speedHistory }: RaceSummaryProps) {
     const toFixed = (speed: number) => speed.toFixed(1);
 
     const leaderboard = useMemo(() => {
@@ -36,6 +38,18 @@ export default function RaceSummary({ players, stats }: RaceSummaryProps) {
         return { fastest, slowest };
     }, [players, stats]);
 
+    const chartData = useMemo(() => {
+        const dataMap = new Map<string, { time: number; speed: number }[]>();
+        speedHistory.forEach((speeds, playerId) => {
+            const data = speeds.map((speed, index) => ({
+                time: index,
+                speed: parseFloat(speed.toFixed(1)),
+            }));
+            dataMap.set(playerId, data);
+        });
+        return dataMap;
+    }, [speedHistory]);
+
   return (
     <Card>
       <CardHeader>
@@ -48,8 +62,17 @@ export default function RaceSummary({ players, stats }: RaceSummaryProps) {
                 const playerStats = stats.get(player.id);
                 if (!playerStats) return null;
 
+                const data = chartData.get(player.id) ?? [];
+                
+                const chartConfig = {
+                    speed: {
+                      label: "Speed (m/s)",
+                      color: player.color,
+                    },
+                  } satisfies ChartConfig
+
                 return (
-                    <div key={player.id} className="p-3 rounded-lg bg-secondary/20">
+                    <div key={player.id} className="p-3 rounded-lg bg-secondary/20 space-y-2">
                         <div className="flex items-center gap-4">
                             <Avatar>
                                 <AvatarFallback style={{ backgroundColor: player.color, color: 'hsl(var(--background))' }}>
@@ -74,6 +97,45 @@ export default function RaceSummary({ players, stats }: RaceSummaryProps) {
                                     <p className="font-bold">{toFixed(playerStats.minSpeed)} m/s</p>
                                 </div>
                             </div>
+                        </div>
+                        <div className="h-32 w-full">
+                            <ChartContainer config={chartConfig}>
+                                <AreaChart
+                                    accessibilityLayer
+                                    data={data}
+                                    margin={{
+                                        left: 0,
+                                        right: 12,
+                                        top: 5,
+                                        bottom: 0,
+                                    }}
+                                >
+                                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                                    <XAxis
+                                        dataKey="time"
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickMargin={8}
+                                        tickFormatter={() => ""}
+                                        label="Time"
+                                    />
+                                     <YAxis
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickMargin={8}
+                                        domain={[0, 'dataMax + 2']}
+                                    />
+                                    <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+                                    <Area
+                                        dataKey="speed"
+                                        type="natural"
+                                        fill={player.color}
+                                        fillOpacity={0.4}
+                                        stroke={player.color}
+                                        stackId="a"
+                                    />
+                                </AreaChart>
+                            </ChartContainer>
                         </div>
                     </div>
                 );

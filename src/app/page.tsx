@@ -48,6 +48,8 @@ export default function Home() {
   const [speeds, setSpeeds] = useState<Map<string, number>>(new Map());
   const [windowSize, setWindowSize] = useState<{width: number, height: number}>({width: 0, height: 0});
   const [raceStats, setRaceStats] = useState<Map<string, PlayerStatsData>>(new Map());
+  const [speedHistory, setSpeedHistory] = useState<Map<string, number[]>>(new Map());
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -80,6 +82,7 @@ export default function Home() {
     setProgress(initialProgress);
     setSpeeds(initialSpeeds);
     setRaceStats(new Map());
+    setSpeedHistory(new Map());
 
     setWinner(null);
     setGameState('racing');
@@ -91,6 +94,7 @@ export default function Home() {
     if (winnerPlayer) {
       setWinner(winnerPlayer);
     }
+    setSpeedHistory(speedHistory);
 
     const stats = new Map<string, PlayerStatsData>();
     speedHistory.forEach((speeds, playerId) => {
@@ -126,6 +130,7 @@ export default function Home() {
     setSpeeds(new Map());
     setShowWinnerPopup(false);
     setRaceStats(new Map());
+    setSpeedHistory(new Map());
   }
 
   return (
@@ -154,7 +159,7 @@ export default function Home() {
             />
             <PlayerStats players={players} progress={progress} speeds={speeds} winnerId={winner?.id ?? null} />
             {gameState === 'finished' && raceStats.size > 0 && (
-              <RaceSummary players={players} stats={raceStats} />
+              <RaceSummary players={players} stats={raceStats} speedHistory={speedHistory} />
             )}
           </div>
         )}
