@@ -105,7 +105,9 @@ export default function Home() {
           <p className="text-muted-foreground text-lg mt-2">The ultimate AI-powered horse racing simulation.</p>
         </header>
         
-        <Lobby onStartRace={handleStartRace} availableColors={availableColors} players={players} setPlayers={setPlayers} disabled={gameState !== 'lobby'} />
+        {gameState === 'lobby' && (
+            <Lobby onStartRace={handleStartRace} availableColors={availableColors} players={players} setPlayers={setPlayers} />
+        )}
 
         {(gameState === 'racing' || gameState === 'finished') && (
           <div className="space-y-8 w-full mt-8">

@@ -31,7 +31,6 @@ interface LobbyProps {
   availableColors: string[];
   players: Player[];
   setPlayers: React.Dispatch<React.SetStateAction<Player[]>>;
-  disabled: boolean;
 }
 
 const formSchema = z.object({
@@ -44,7 +43,7 @@ const bulkFormSchema = z.object({
 });
 
 
-export default function Lobby({ onStartRace, availableColors, players, setPlayers, disabled }: LobbyProps) {
+export default function Lobby({ onStartRace, availableColors, players, setPlayers }: LobbyProps) {
   const [isPending, startTransition] = useTransition();
   const [isBulkPending, startBulkTransition] = useTransition();
   const { toast } = useToast();
@@ -152,7 +151,7 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
   }
 
   return (
-    <Card className={cn("w-full max-w-4xl mx-auto transition-opacity", disabled && "opacity-50 pointer-events-none")}>
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Race Lobby</CardTitle>
         <CardDescription>Add up to {availableColors.length} players to the race. Then start the derby!</CardDescription>
