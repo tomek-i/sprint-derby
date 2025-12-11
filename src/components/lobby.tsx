@@ -126,13 +126,14 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
             title: `Error for ${name}`,
             description: jockeyNameResult.error || 'Could not generate a jockey name.',
           });
-          continue; // Skip this player, but try to add others
+          // if jockey name generation fails, we use the default player name
+          // continue; // Skip this player, but try to add others
         }
 
         newPlayers.push({
           id: `${name}-${Math.random()}`,
           name: name,
-          jockeyName: jockeyNameResult.jockeyName,
+          jockeyName: jockeyNameResult.jockeyName || name,
           color: nextColor(index),
           isAI: false, // Bulk add defaults to human players
         });
@@ -159,7 +160,7 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
-          ({false && <div>
+          {false && <div>
             <h3 className="font-bold mb-4">Add New Player</h3>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(addPlayer)} className="space-y-6">
@@ -201,7 +202,7 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
                 </Button>
               </form>
             </Form>
-          </div>})
+          </div>}
 
           <Separator />
 
