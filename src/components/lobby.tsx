@@ -69,12 +69,12 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
 
   const addPlayer = async (values: z.infer<typeof formSchema>) => {
     if (players.length >= availableColors.length) {
-        toast({
-            variant: 'destructive',
-            title: 'Lobby is full!',
-            description: `You can add a maximum of ${availableColors.length} players.`,
-        });
-        return;
+      toast({
+        variant: 'destructive',
+        title: 'Lobby is full!',
+        description: `You can add a maximum of ${availableColors.length} players.`,
+      });
+      return;
     }
 
     startTransition(async () => {
@@ -85,13 +85,14 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
           title: 'Uh oh! Something went wrong.',
           description: jockeyNameResult.error || 'Could not generate a jockey name.',
         });
-        return;
+        // if jockey name generation fails, we use the default player name
+        // return;
       }
-      
+
       const newPlayer: Omit<Player, 'noise'> = {
         id: `${values.name}-${Math.random()}`,
         name: values.name,
-        jockeyName: jockeyNameResult.jockeyName,
+        jockeyName: jockeyNameResult.jockeyName || values.name,
         color: nextColor(),
         isAI: values.isAI,
       };
@@ -116,7 +117,7 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
 
     startBulkTransition(async () => {
       const newPlayers: Omit<Player, 'noise'>[] = [];
-      
+
       for (const [index, name] of names.entries()) {
         const jockeyNameResult = await generateJockeyNameAction({ animalType: 'horse', playerName: name });
         if (jockeyNameResult.error || !jockeyNameResult.jockeyName) {
@@ -127,7 +128,7 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
           });
           continue; // Skip this player, but try to add others
         }
-        
+
         newPlayers.push({
           id: `${name}-${Math.random()}`,
           name: name,
@@ -141,7 +142,7 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
       bulkForm.reset();
     });
   };
-  
+
   const removePlayer = (id: string) => {
     setPlayers(prev => prev.filter(p => p.id !== id));
   }
@@ -158,7 +159,7 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
-          <div>
+          ({false && <div>
             <h3 className="font-bold mb-4">Add New Player</h3>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(addPlayer)} className="space-y-6">
@@ -180,56 +181,56 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
                   control={form.control}
                   name="isAI"
                   render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                          <div className="space-y-0.5">
-                              <FormLabel>AI Opponent</FormLabel>
-                          </div>
-                          <FormControl>
-                              <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                              />
-                          </FormControl>
-                      </FormItem>
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <div className="space-y-0.5">
+                        <FormLabel>AI Opponent</FormLabel>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
                   )}
                 />
-                
+
                 <Button type="submit" disabled={isPending || players.length >= availableColors.length} className="w-full">
                   {isPending ? <Loader2 className="animate-spin" /> : <UserPlus />}
                   Add Player
                 </Button>
               </form>
             </Form>
-          </div>
+          </div>})
 
           <Separator />
-          
+
           <div>
             <h3 className="font-bold mb-4">Add Multiple Players</h3>
-             <Form {...bulkForm}>
-                <form onSubmit={bulkForm.handleSubmit(addBulkPlayers)} className="space-y-4">
-                  <FormField
-                    control={bulkForm.control}
-                    name="names"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Comma-separated names</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="e.g. Alice, Bob, Charlie"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" disabled={isBulkPending || players.length >= availableColors.length} className="w-full">
-                    {isBulkPending ? <Loader2 className="animate-spin" /> : <Users />}
-                    Add Players
-                  </Button>
-                </form>
-              </Form>
+            <Form {...bulkForm}>
+              <form onSubmit={bulkForm.handleSubmit(addBulkPlayers)} className="space-y-4">
+                <FormField
+                  control={bulkForm.control}
+                  name="names"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Comma-separated names</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="e.g. Alice, Bob, Charlie"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={isBulkPending || players.length >= availableColors.length} className="w-full">
+                  {isBulkPending ? <Loader2 className="animate-spin" /> : <Users />}
+                  Add Players
+                </Button>
+              </form>
+            </Form>
           </div>
 
         </div>
@@ -239,31 +240,31 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
             {players.length === 0 && <p className="text-muted-foreground text-center py-8">No players added yet.</p>}
             {players.map(player => (
               <div key={player.id} className="flex items-center gap-4 p-2 rounded-md bg-secondary/30">
-                 <Avatar>
-                    <AvatarFallback style={{ backgroundColor: player.color }}>
-                      {player.isAI ? (
-                        <Bot className="text-background" />
-                      ) : (
-                        <User className="text-background" />
-                      )}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="font-bold">{player.jockeyName}</p>
-                    <p className="text-sm text-muted-foreground">{player.name}</p>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={() => removePlayer(player.id)}>
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
+                <Avatar>
+                  <AvatarFallback style={{ backgroundColor: player.color }}>
+                    {player.isAI ? (
+                      <Bot className="text-background" />
+                    ) : (
+                      <User className="text-background" />
+                    )}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <p className="font-bold">{player.jockeyName}</p>
+                  <p className="text-sm text-muted-foreground">{player.name}</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => removePlayer(player.id)}>
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                </Button>
               </div>
             ))}
           </div>
         </div>
       </CardContent>
       <CardFooter>
-          <Button onClick={handleStartRace} size="lg" className="w-full" disabled={players.length < 2}>
-              Start Race with {players.length} players
-          </Button>
+        <Button onClick={handleStartRace} size="lg" className="w-full" disabled={players.length < 2}>
+          Start Race with {players.length} players
+        </Button>
       </CardFooter>
     </Card>
   );
