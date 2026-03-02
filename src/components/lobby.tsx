@@ -38,12 +38,14 @@ const formSchema = z.object({
   isAI: z.boolean(),
 });
 
+// Add API key input above player entry
 const bulkFormSchema = z.object({
   names: z.string().min(1, 'Please enter at least one name.'),
 });
 
 
 export default function Lobby({ onStartRace, availableColors, players, setPlayers }: LobbyProps) {
+  const [apiKey, setApiKey] = useState('');
   const [isPending, startTransition] = useTransition();
   const [isBulkPending, startBulkTransition] = useTransition();
   const { toast } = useToast();
@@ -68,6 +70,19 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
   };
 
   const addPlayer = async (values: z.infer<typeof formSchema>) => {
+    // If no API key, skip jockey name generation
+    if (!apiKey) {
+      const newPlayer: Omit<Player, 'noise'> = {
+        id: `${values.name}-${Math.random()}`,
+        name: values.name,
+        jockeyName: values.name,
+        color: nextColor(),
+        isAI: values.isAI,
+      };
+      setPlayers(prev => [...prev, newPlayer as Player]);
+      form.reset({ name: '', isAI: false });
+      return;
+    }
     if (players.length >= availableColors.length) {
       toast({
         variant: 'destructive',
@@ -78,7 +93,7 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
     }
 
     startTransition(async () => {
-      const jockeyNameResult = await generateJockeyNameAction({ animalType: 'horse', playerName: values.name });
+      const jockeyNameResult = await generateJockeyNameAction({ animalType: 'horse', playerName: values.name, apiKey });
       if (jockeyNameResult.error || !jockeyNameResult.jockeyName) {
         toast({
           variant: 'destructive',
@@ -119,7 +134,7 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
       const newPlayers: Omit<Player, 'noise'>[] = [];
 
       for (const [index, name] of names.entries()) {
-        const jockeyNameResult = await generateJockeyNameAction({ animalType: 'horse', playerName: name });
+        const jockeyNameResult = await generateJockeyNameAction({ animalType: 'horse', playerName: name, apiKey });
         if (jockeyNameResult.error || !jockeyNameResult.jockeyName) {
           toast({
             variant: 'destructive',
@@ -160,6 +175,16 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-1">Google AI API Key</label>
+            <Input
+              type="text"
+              placeholder="Paste your Google AI API key here"
+              value={apiKey}
+              onChange={e => setApiKey(e.target.value)}
+              className="mt-2"
+            />
+          </div>
           {false && <div>
             <h3 className="font-bold mb-4">Add New Player</h3>
             <Form {...form}>

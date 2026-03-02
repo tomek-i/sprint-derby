@@ -6,10 +6,10 @@ import {
 } from '@/ai/flows/generate-jockey-name';
 
 export async function generateJockeyNameAction(
-  input: GenerateJockeyNameInput
+  input: GenerateJockeyNameInput & { apiKey?: string }
 ) {
   try {
-    const result = await generateJockeyName(input);
+    const result = await generateJockeyName({ ...input, apiKey: input.apiKey });
     return { jockeyName: result.jockeyName };
   } catch (error) {
     console.error(error);

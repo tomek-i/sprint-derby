@@ -26,7 +26,11 @@ const GenerateJockeyNameOutputSchema = z.object({
 });
 export type GenerateJockeyNameOutput = z.infer<typeof GenerateJockeyNameOutputSchema>;
 
-export async function generateJockeyName(input: GenerateJockeyNameInput): Promise<GenerateJockeyNameOutput> {
+export async function generateJockeyName(input: GenerateJockeyNameInput & { apiKey?: string }): Promise<GenerateJockeyNameOutput> {
+  // If no apiKey, skip jockey name generation
+  if (!input.apiKey) {
+    return { jockeyName: input.playerName };
+  }
   return generateJockeyNameFlow(input);
 }
 
