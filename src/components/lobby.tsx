@@ -171,15 +171,22 @@ export default function Lobby({ onStartRace, availableColors, players, setPlayer
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Race Lobby</CardTitle>
-        <CardDescription>Add up to {availableColors.length} players to the race. Then start the derby!</CardDescription>
+        <CardDescription>Add 2 to {availableColors.length} names, run the race, and whoever wins takes the task.</CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
           <div className="mb-6">
-            <label className="block text-sm font-medium mb-1">Google AI API Key</label>
+            <label className="block text-sm font-medium mb-1">
+              Google AI API Key{' '}
+              <span className="text-muted-foreground font-normal">(optional)</span>
+            </label>
+            <p className="text-sm text-muted-foreground">
+              Only used to give your racers fun jockey names. Leave it empty and
+              everything still works &mdash; everyone just races under their own name.
+            </p>
             <Input
-              type="text"
-              placeholder="Paste your Google AI API key here"
+              type="password"
+              placeholder="Paste your Google AI API key here (optional)"
               value={apiKey}
               onChange={e => setApiKey(e.target.value)}
               className="mt-2"

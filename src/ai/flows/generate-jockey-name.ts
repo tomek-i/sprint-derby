@@ -27,11 +27,13 @@ const GenerateJockeyNameOutputSchema = z.object({
 export type GenerateJockeyNameOutput = z.infer<typeof GenerateJockeyNameOutputSchema>;
 
 export async function generateJockeyName(input: GenerateJockeyNameInput & { apiKey?: string }): Promise<GenerateJockeyNameOutput> {
-  // If no apiKey, skip jockey name generation
+  // Jockey names are the only thing the AI is used for, so with no key we just
+  // race under the player's own name.
   if (!input.apiKey) {
     return { jockeyName: input.playerName };
   }
-  return generateJockeyNameFlow(input);
+  const { apiKey, ...promptInput } = input;
+  return generateJockeyNameFlow(promptInput, {context: {apiKey}});
 }
 
 const prompt = ai.definePrompt({
@@ -51,8 +53,12 @@ const generateJockeyNameFlow = ai.defineFlow(
     inputSchema: GenerateJockeyNameInputSchema,
     outputSchema: GenerateJockeyNameOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  // The key is passed alongside the input rather than in it, so it stays out of
+  // the flow's traced input. It overrides whatever key the plugin was built with.
+  async (input, {context}) => {
+    const {output} = await prompt(input, {
+      config: {apiKey: context?.apiKey},
+    });
+    return output ?? {jockeyName: input.playerName};
   }
 );

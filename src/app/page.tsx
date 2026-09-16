@@ -167,7 +167,7 @@ export default function Home() {
             Sprint Derby
             <Flag className="w-12 h-12 md:w-16 md:h-16" />
           </h1>
-          <p className="text-muted-foreground text-lg mt-2">The ultimate AI-powered horse racing simulation.</p>
+          <p className="text-muted-foreground text-lg mt-2">Add your team, run the race, the winner takes the task.</p>
         </header>
         
         {gameState === 'lobby' && (

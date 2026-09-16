@@ -44,11 +44,12 @@ lobby. With no key, each racer's jockey name is just their own name, and
 everything else — the race, the stats, the winner — behaves identically. If a
 name fails to generate, it quietly falls back to the plain name too.
 
-To enable it when running locally:
+To use it, paste a [Google AI API key](https://aistudio.google.com/apikey) into
+the **Google AI API Key** field in the lobby. Your key is used for that request
+only; it isn't stored.
 
-1. Put a [Google AI](https://aistudio.google.com/apikey) key in `.env` as
-   `GOOGLE_API_KEY=...` — this is the credential Genkit uses for the Gemini call.
-2. Paste a key into the **Google AI API Key** field in the lobby, which is what
-   switches the name generation on.
+If you're self-hosting and want name generation to work without anyone pasting a
+key, set `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) in the environment and it's used
+as the fallback.
 
 Built with Next.js, TypeScript, Tailwind, shadcn/ui, and Genkit.
